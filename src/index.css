@@ -1,0 +1,89 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+  }
+}
+
+/* Light & Dark Mode Tokens */
+.theme-light {
+  background-color: #FAF8F5;
+  color: #1A1D20;
+}
+
+.theme-dark {
+  background-color: #0C0E14;
+  color: #F3F4F6;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 7px;
+  height: 7px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(150, 150, 150, 0.3);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #56876D;
+}
+
+/* Non-Overlapping Pure CSS Masonry Grid */
+.masonry-columns {
+  column-count: 1;
+  column-gap: 16px;
+}
+
+@media (min-width: 640px) {
+  .masonry-columns {
+    column-count: 2;
+    column-gap: 16px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .masonry-columns {
+    column-count: 4;
+    column-gap: 16px;
+  }
+}
+
+.masonry-item {
+  break-inside: avoid;
+  margin-bottom: 16px;
+  display: inline-block;
+  width: 100%;
+  transform: translateZ(0);
+}
+
+/* Shimmer & Text Effects */
+.gold-gradient-text {
+  background: linear-gradient(135deg, #1A1D20 0%, #56876D 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.theme-dark .gold-gradient-text {
+  background: linear-gradient(135deg, #FFF0D4 0%, #C9A96E 50%, #A37E3E 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Hide scrollbar for carousels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
