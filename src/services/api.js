@@ -3,7 +3,7 @@
  * Seamlessly connects React frontend to Node.js / Express backend (port 5000)
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001/api/v1';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://onemoreglimpse-backend.onrender.com/api/v1';
 
 /**
  * Core HTTP Request Wrapper
