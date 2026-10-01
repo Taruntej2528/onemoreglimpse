@@ -15,12 +15,23 @@ import {
   ShieldCheck, 
   ArrowRight,
   Heart,
-  Check
+  Check,
+  Upload,
+  X,
+  Film,
+  Image as ImageIcon,
+  Paperclip,
+  RefreshCw
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { siteConfig } from '../config/siteConfig';
+import { useSite } from '../context/SiteContext';
+import { mediaAPI } from '../services/api';
 
 export const EnquiryForm = ({ isDarkMode }) => {
+  const { brand: liveBrand, submitInquiry } = useSite();
+  const brand = liveBrand || siteConfig.brand || {};
+
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -32,6 +43,9 @@ export const EnquiryForm = ({ isDarkMode }) => {
     notes: '',
   });
 
+  const [attachment, setAttachment] = useState(null); // { url, type, name, size }
+  const [isUploadingAttachment, setIsUploadingAttachment] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const [submitted, setSubmitted] = useState(false);
 
   const eventTypes = [
@@ -62,7 +76,41 @@ export const EnquiryForm = ({ isDarkMode }) => {
     setFormData({ ...formData, budget: budget });
   };
 
-  const handleSubmit = (e) => {
+  const handleAttachmentUpload = async (file) => {
+    if (!file) return;
+    if (file.size > 100 * 1024 * 1024) {
+      setUploadError('File exceeds 100MB limit.');
+      return;
+    }
+
+    setIsUploadingAttachment(true);
+    setUploadError('');
+
+    try {
+      const uploadData = new FormData();
+      uploadData.append('file', file);
+      uploadData.append('title', `${formData.name || 'Client'} - Moodboard / Inspiration`);
+
+      const res = await mediaAPI.uploadPublic(uploadData);
+      if (res?.data?.url) {
+        setAttachment({
+          url: res.data.url,
+          type: res.data.type,
+          name: file.name,
+          size: (file.size / (1024 * 1024)).toFixed(2),
+        });
+      } else {
+        throw new Error('Upload succeeded but no link was returned');
+      }
+    } catch (err) {
+      console.error('[Attachment Upload Error]', err);
+      setUploadError(err.message || 'Upload failed. Please try again.');
+    } finally {
+      setIsUploadingAttachment(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     confetti({
       particleCount: 85,
@@ -71,7 +119,25 @@ export const EnquiryForm = ({ isDarkMode }) => {
       colors: ['#56876D', '#C9A96E', '#1A1D20', '#FFFFFF'],
     });
 
-    const msg = `✨ *Wedding Date Reservation Enquiry - ${siteConfig.brand.name}* ✨
+    // 1. Submit lead to MongoDB backend ClientRequests & Notifications
+    await submitInquiry({
+      clientName: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      eventType: formData.eventType,
+      eventDate: formData.eventDate,
+      eventCity: formData.location,
+      budget: formData.budget,
+      notes: formData.notes,
+      attachmentUrl: attachment?.url || '',
+      attachmentType: attachment?.type || '',
+      attachmentName: attachment?.name || '',
+      source: 'enquiry_form',
+    });
+
+    // 2. Open WhatsApp for instantaneous concierge engagement
+    const brandName = brand?.name || siteConfig.brand.name;
+    let msg = `✨ *Wedding Date Reservation Enquiry - ${brandName}* ✨
 -----------------------------------------
 👤 *Couple / Client:* ${formData.name}
 📱 *Phone:* ${formData.phone}
@@ -80,11 +146,16 @@ export const EnquiryForm = ({ isDarkMode }) => {
 📅 *Event Date:* ${formData.eventDate || 'To be finalized'}
 📍 *Destination / City:* ${formData.location || 'Not provided'}
 💰 *Budget Bracket:* ${formData.budget}
-📝 *Vision / Notes:* ${formData.notes || 'None'}
------------------------------------------
+📝 *Vision / Notes:* ${formData.notes || 'None'}`;
+
+    if (attachment?.url) {
+      msg += `\n📎 *Moodboard / Attachment:* ${attachment.url}`;
+    }
+
+    msg += `\n-----------------------------------------
 Hi Prazna Team, please check your availability for our dates and share the next steps!`;
 
-    const cleanNumber = siteConfig.brand.whatsappNumber.replace(/[^0-9]/g, '');
+    const cleanNumber = (brand?.whatsappNumber || siteConfig.brand.whatsappNumber || '919876543210').replace(/[^0-9]/g, '');
     const url = `https://wa.me/${cleanNumber}?text=${encodeURIComponent(msg)}`;
     window.open(url, '_blank');
     setSubmitted(true);
@@ -403,6 +474,95 @@ Hi Prazna Team, please check your availability for our dates and share the next 
                       : 'bg-white border-[#E0DCD3] text-[#1A1D20] placeholder-neutral-400 focus:border-[#56876D]'
                   }`}
                 />
+              </div>
+
+              {/* 6. Optional Moodboard / Invitation Upload */}
+              <div>
+                <label className={`block text-[11px] font-semibold uppercase tracking-wider mb-1.5 ${
+                  isDarkMode ? 'text-neutral-400' : 'text-[#5C6470]'
+                }`}>
+                  Attach Moodboard / Inspiration / Invitation Card (Optional)
+                </label>
+
+                {uploadError && (
+                  <p className="text-xs text-rose-400 mb-2">{uploadError}</p>
+                )}
+
+                {attachment ? (
+                  <div className={`p-3 rounded-2xl border flex items-center justify-between transition-all ${
+                    isDarkMode ? 'bg-white/[0.03] border-emerald-500/30' : 'bg-emerald-50/50 border-emerald-500/30'
+                  }`}>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-black/40 flex items-center justify-center flex-shrink-0 border border-white/10">
+                        {attachment.type === 'video' ? (
+                          <Film className="w-5 h-5 text-[#C9A96E]" />
+                        ) : (
+                          <img src={attachment.url} alt="Attachment" className="w-full h-full object-cover" />
+                        )}
+                      </div>
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-xs font-semibold truncate ${isDarkMode ? 'text-white' : 'text-[#1A1D20]'}`}>
+                            {attachment.name}
+                          </p>
+                          <span className="text-[10px] text-emerald-500 font-bold flex items-center gap-0.5">
+                            <CheckCircle2 className="w-3 h-3" /> Attached
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-neutral-400 font-mono">
+                          {attachment.size} MB • Stored in Cloud
+                        </p>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setAttachment(null)}
+                      className="p-1.5 rounded-lg text-neutral-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors ml-2 cursor-pointer"
+                      title="Remove attachment"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label className={`block border-2 border-dashed rounded-2xl p-4 text-center cursor-pointer transition-all ${
+                    isDarkMode
+                      ? 'border-white/15 bg-white/[0.02] hover:border-white/30 hover:bg-white/[0.04]'
+                      : 'border-[#E0DCD3] bg-white hover:border-[#56876D] hover:bg-[#FAF8F5]'
+                  }`}>
+                    <input
+                      type="file"
+                      accept="image/*,video/*"
+                      disabled={isUploadingAttachment}
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleAttachmentUpload(f);
+                      }}
+                    />
+
+                    {isUploadingAttachment ? (
+                      <div className="flex items-center justify-center gap-2 py-2 text-xs text-[#C9A96E]">
+                        <RefreshCw className="w-4 h-4 animate-spin" />
+                        <span>Uploading file to secure cloud storage...</span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center gap-3 py-1">
+                        <div className="p-2 rounded-xl bg-neutral-500/10 text-[#C9A96E]">
+                          <Paperclip className="w-4 h-4" />
+                        </div>
+                        <div className="text-left">
+                          <p className={`text-xs font-medium ${isDarkMode ? 'text-neutral-200' : 'text-[#1A1D20]'}`}>
+                            Click or drag wedding invitation, moodboard, or video clip
+                          </p>
+                          <p className="text-[10px] text-neutral-400">
+                            PNG, JPG, WebP, or MP4 (Max 100MB)
+                          </p>
+                        </div>
+                      </div>
+                    )}
+                  </label>
+                )}
               </div>
 
               {/* Submit Buttons */}

@@ -1,33 +1,52 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, Film, Image as ImageIcon, Crown, Play, Pause, ChevronRight } from 'lucide-react';
+import { Sparkles, Film, Crown, ChevronRight } from 'lucide-react';
 import { siteConfig } from '../config/siteConfig';
+import { useSite } from '../context/SiteContext';
 
 export const HeroVideo = ({ onOpenQuote }) => {
-  // Background modes: 'bride' (Heritage Silk Saree), 'video' (4K Cinema Film), 'mosaic' (Photriya Collage Wall)
-  const [bgMode, setBgMode] = useState('bride');
-  const [selectedSceneId, setSelectedSceneId] = useState(siteConfig.defaultHeroSceneId || 'varsha-shiva');
-  const [videoLoaded, setVideoLoaded] = useState(false);
+  const { hero: liveHero, brand: liveBrand } = useSite();
+  const brand = liveBrand || siteConfig.brand || {};
+  const heroMediaType = liveHero?.heroMediaType || siteConfig.heroMediaType || 'video'; // 'video' | 'image'
+  const activeVideoId = liveHero?.activeHeroVideoId || siteConfig.activeHeroVideoId || siteConfig.defaultHeroSceneId || 'varsha-shiva';
+  const activeImageId = liveHero?.activeHeroImageId || siteConfig.activeHeroImageId || 'heritage-bride-silk';
 
-  const currentScene = siteConfig.heroScenes.find(s => s.id === selectedSceneId) || siteConfig.heroScenes[0];
+  const heroVideos = (liveHero?.heroVideos && liveHero.heroVideos.length > 0)
+    ? liveHero.heroVideos
+    : siteConfig.heroVideos || siteConfig.heroScenes || [];
+  const heroImages = (liveHero?.heroImages && liveHero.heroImages.length > 0)
+    ? liveHero.heroImages
+    : siteConfig.heroImages || [];
+
+  const currentVideo = heroVideos.find(v => v.id === activeVideoId) || heroVideos[0] || siteConfig.heroScenes[0];
+  const currentImage = heroImages.find(img => img.id === activeImageId) || heroImages[0] || {
+    id: 'heritage-bride-silk',
+    name: 'Royal Emerald Silk Bride',
+    src: '/assets/hero-green-saree-bride.jpg',
+    tagline: 'Immortalizing timeless bridal composure & handcrafted silks.'
+  };
+
+  // Dynamic Hero media driven purely by the database (Admin Settings)
+  const bgMode = heroMediaType === 'image' ? 'image' : 'video';
+  const [videoLoaded, setVideoLoaded] = useState(false);
 
   useEffect(() => {
     setVideoLoaded(false);
-  }, [selectedSceneId]);
+  }, [currentVideo.videoId]);
 
   return (
     <section className="relative min-h-screen w-full flex items-center justify-center overflow-hidden bg-[#0A0C10]">
       
       {/* ========================================================================= */}
-      {/* DYNAMIC BACKGROUND LAYER: SWITCH BETWEEN 3 DISTINCT LUXURY VISUAL MODES */}
+      {/* DYNAMIC BACKGROUND LAYER: SINGLE ACTIVE VIDEO OR SINGLE ACTIVE IMAGE      */}
       {/* ========================================================================= */}
       <div className="absolute inset-0 w-full h-full z-0 overflow-hidden pointer-events-none select-none">
         <AnimatePresence mode="wait">
           
-          {/* 1. HERITAGE BRIDE SHOWCASE (Matching Knoty Weddings emerald silk saree bride) */}
-          {bgMode === 'bride' && (
+          {/* 1. SINGLE ACTIVE HERO IMAGE (Configured by admin) */}
+          {bgMode === 'image' && (
             <motion.div
-              key="bg-bride"
+              key={`bg-image-${currentImage.id || currentImage.src}`}
               initial={{ opacity: 0, scale: 1.08 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
@@ -35,8 +54,8 @@ export const HeroVideo = ({ onOpenQuote }) => {
               className="absolute inset-0 w-full h-full"
             >
               <motion.img
-                src="/assets/hero-green-saree-bride.jpg"
-                alt="Prazna Heritage Silk Bride"
+                src={currentImage.src}
+                alt={currentImage.name || "Prazna Heritage Visual"}
                 fetchPriority="high"
                 loading="eager"
                 animate={{ scale: [1, 1.04, 1] }}
@@ -49,10 +68,10 @@ export const HeroVideo = ({ onOpenQuote }) => {
             </motion.div>
           )}
 
-          {/* 2. 4K CINEMA STREAMING (Varsha & Shiva, Athiya & Rahul, Royal Jaipur) */}
+          {/* 2. SINGLE ACTIVE HERO 4K VIDEO (Configured by admin) */}
           {bgMode === 'video' && (
             <motion.div
-              key={`bg-video-${currentScene.videoId}`}
+              key={`bg-video-${currentVideo.videoId}`}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
@@ -61,8 +80,8 @@ export const HeroVideo = ({ onOpenQuote }) => {
             >
               {/* Instant High-Res Poster Fallback */}
               <img
-                src={currentScene.poster}
-                alt={currentScene.name}
+                src={currentVideo.poster}
+                alt={currentVideo.name}
                 fetchPriority="high"
                 loading="eager"
                 className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 ${
@@ -72,9 +91,9 @@ export const HeroVideo = ({ onOpenQuote }) => {
 
               {/* Verified High-Definition YouTube Embed */}
               <iframe
-                key={currentScene.videoId}
-                src={`https://www.youtube-nocookie.com/embed/${currentScene.videoId}?autoplay=1&mute=1&loop=1&playlist=${currentScene.videoId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
-                title={currentScene.name}
+                key={currentVideo.videoId}
+                src={`https://www.youtube-nocookie.com/embed/${currentVideo.videoId}?autoplay=1&mute=1&loop=1&playlist=${currentVideo.videoId}&controls=0&showinfo=0&rel=0&iv_load_policy=3&modestbranding=1&playsinline=1&enablejsapi=1`}
+                title={currentVideo.name}
                 frameBorder="0"
                 loading="eager"
                 allow="autoplay; encrypted-media"
@@ -88,96 +107,7 @@ export const HeroVideo = ({ onOpenQuote }) => {
             </motion.div>
           )}
 
-          {/* 3. PHOTRIYA MOSAIC COLLAGE WALL (Matching Photriya Studios reference) */}
-          {bgMode === 'mosaic' && (
-            <motion.div
-              key="bg-mosaic"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 1 }}
-              className="absolute inset-0 w-full h-full overflow-hidden"
-            >
-              <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 gap-2 w-[110%] h-[110%] -translate-x-[5%] -translate-y-[5%] filter grayscale contrast-110 brightness-60">
-                {siteConfig.gallery.slice(0, 24).map((photo, i) => (
-                  <motion.div
-                    key={photo.id}
-                    initial={{ opacity: 0.6 }}
-                    animate={{ opacity: [0.55, 0.8, 0.55] }}
-                    transition={{ duration: 6 + (i % 5), repeat: Infinity, ease: "easeInOut" }}
-                    className="overflow-hidden rounded-md bg-stone-900 aspect-[4/5]"
-                  >
-                    <img
-                      src={photo.src}
-                      alt={photo.title}
-                      loading="lazy"
-                      className="w-full h-full object-cover"
-                    />
-                  </motion.div>
-                ))}
-              </div>
-              <div className="absolute inset-0 bg-black/40 backdrop-blur-[1px]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/60" />
-              <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(0,0,0,0.15)_0%,rgba(0,0,0,0.75)_80%,rgba(0,0,0,0.96)_100%)]" />
-            </motion.div>
-          )}
-
         </AnimatePresence>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* FLOATING TOP/CORNER CONTROLLER: BACKGROUND THEME MODE SELECTOR            */}
-      {/* ========================================================================= */}
-      <div className="absolute top-24 sm:top-28 right-4 sm:right-8 z-30 pointer-events-auto">
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="p-1 rounded-full bg-black/65 backdrop-blur-xl border border-white/20 flex items-center gap-1 shadow-2xl"
-        >
-          <span className="text-[10px] text-white/50 uppercase tracking-wider pl-2.5 pr-1 hidden md:inline font-mono">
-            Background:
-          </span>
-
-          <button
-            onClick={() => setBgMode('bride')}
-            title="Heritage Bride Visual"
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-1.5 ${
-              bgMode === 'bride'
-                ? 'bg-[#56876D] text-white shadow-md font-semibold'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <Crown className="w-3 h-3 text-[#E5D2A8]" />
-            <span>Heritage Bride</span>
-          </button>
-
-          <button
-            onClick={() => setBgMode('video')}
-            title="4K Cinema Wedding Film"
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-1.5 ${
-              bgMode === 'video'
-                ? 'bg-[#56876D] text-white shadow-md font-semibold'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <Film className="w-3 h-3 text-[#C9A96E]" />
-            <span>4K Film</span>
-          </button>
-
-          <button
-            onClick={() => setBgMode('mosaic')}
-            title="Photriya Photo Mosaic Wall"
-            className={`px-3 py-1 rounded-full text-xs font-medium transition-all duration-300 flex items-center gap-1.5 ${
-              bgMode === 'mosaic'
-                ? 'bg-[#56876D] text-white shadow-md font-semibold'
-                : 'text-white/70 hover:text-white hover:bg-white/10'
-            }`}
-          >
-            <ImageIcon className="w-3 h-3 text-[#E5D2A8]" />
-            <span>Photo Wall</span>
-          </button>
-        </motion.div>
       </div>
 
       {/* ========================================================================= */}
@@ -200,15 +130,15 @@ export const HeroVideo = ({ onOpenQuote }) => {
 
         {/* Animated Main Headline */}
         <motion.h1
-          key={`${bgMode}-${selectedSceneId}`}
+          key={`${bgMode}-${bgMode === 'video' ? currentVideo.id : currentImage.id}`}
           initial={{ opacity: 0, y: 25 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.15 }}
           className="font-serif text-3xl sm:text-5xl md:text-6xl lg:text-7xl text-white font-normal max-w-4xl leading-[1.14] tracking-tight drop-shadow-lg"
         >
           {bgMode === 'video'
-            ? currentScene.tagline
-            : siteConfig.brand.tagline || "Celebrating love in its most real and beautiful moments."}
+            ? currentVideo.tagline || brand.tagline || siteConfig.brand.tagline
+            : currentImage.tagline || brand.tagline || siteConfig.brand.tagline || "Celebrating love in its most real and beautiful moments."}
         </motion.h1>
 
         {/* Subtitle */}
@@ -218,7 +148,7 @@ export const HeroVideo = ({ onOpenQuote }) => {
           transition={{ duration: 0.8, delay: 0.3 }}
           className="text-sm sm:text-base md:text-lg text-white/85 max-w-2xl font-light mt-5 leading-relaxed drop-shadow"
         >
-          {siteConfig.heroSubtitle}
+          {liveHero?.heroSubtitle || brand.subtitle || siteConfig.heroSubtitle}
         </motion.p>
 
         {/* CTA Buttons */}
@@ -240,7 +170,8 @@ export const HeroVideo = ({ onOpenQuote }) => {
           <a
             href="#custom-quote"
             id="hero-build-quote"
-            className="px-7 py-3.5 rounded-full text-xs sm:text-sm font-medium tracking-wide text-white bg-[#56876D] hover:bg-[#46735c] transition-all shadow-xl hover:scale-105 active:scale-95"
+            onClick={onOpenQuote}
+            className="px-7 py-3.5 rounded-full text-xs sm:text-sm font-medium tracking-wide text-white bg-[#56876D] hover:bg-[#46735c] transition-all shadow-xl hover:scale-105 active:scale-95 cursor-pointer"
           >
             Build Your Quote
           </a>
@@ -261,34 +192,45 @@ export const HeroVideo = ({ onOpenQuote }) => {
           </a>
         </motion.div>
 
-        {/* Video Scene Switcher (Visible when '4K Film' mode is active) */}
+        {/* Active Cinema / Film Tagline Badge */}
         {bgMode === 'video' && (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="mt-8 p-1.5 rounded-full bg-black/70 backdrop-blur-xl border border-white/20 flex flex-wrap items-center justify-center gap-1.5 shadow-2xl"
+            className="mt-6 px-4 py-2 rounded-full bg-black/60 backdrop-blur-xl border border-[#C9A96E]/30 inline-flex items-center gap-2 shadow-2xl"
           >
-            <span className="text-[10px] text-white/60 uppercase tracking-widest px-3 hidden sm:inline">
-              Select Wedding Film:
+            <Film className="w-3.5 h-3.5 text-[#C9A96E]" />
+            <span className="text-xs text-white/90 font-medium">
+              Featured 4K Film: <strong className="text-[#E5D2A8]">{currentVideo.name}</strong>
             </span>
-            {siteConfig.heroScenes.map((scene) => {
-              const isSelected = selectedSceneId === scene.id;
-              return (
-                <button
-                  key={scene.id}
-                  onClick={() => setSelectedSceneId(scene.id)}
-                  className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all duration-300 flex items-center gap-1.5 ${
-                    isSelected
-                      ? 'bg-[#56876D] text-white shadow-md font-semibold'
-                      : 'text-white/75 hover:text-white hover:bg-white/10'
-                  }`}
-                >
-                  {isSelected && <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />}
-                  <span>{scene.name}</span>
-                </button>
-              );
-            })}
+            {currentVideo.location && (
+              <>
+                <span className="text-white/40">•</span>
+                <span className="text-[11px] text-white/70">{currentVideo.location}</span>
+              </>
+            )}
+          </motion.div>
+        )}
+
+        {/* Active Image Badge */}
+        {bgMode === 'image' && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            className="mt-6 px-4 py-2 rounded-full bg-black/60 backdrop-blur-xl border border-[#C9A96E]/30 inline-flex items-center gap-2 shadow-2xl"
+          >
+            <Crown className="w-3.5 h-3.5 text-[#C9A96E]" />
+            <span className="text-xs text-white/90 font-medium">
+              Featured Fine-Art Still: <strong className="text-[#E5D2A8]">{currentImage.name}</strong>
+            </span>
+            {currentImage.location && (
+              <>
+                <span className="text-white/40">•</span>
+                <span className="text-[11px] text-white/70">{currentImage.location}</span>
+              </>
+            )}
           </motion.div>
         )}
 

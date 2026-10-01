@@ -2,25 +2,38 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Heart, Sparkles, Film, Award, ShieldCheck, Camera } from 'lucide-react';
 import { siteConfig } from '../config/siteConfig';
+import { useSite } from '../context/SiteContext';
 
 export const PhilosophyBanner = ({ isDarkMode }) => {
-  const pillars = [
-    {
-      icon: Heart,
-      title: "Unscripted Emotion",
-      desc: "No stiff poses or staged smiles. We capture the stolen glances, joyous family tears, and spontaneous festive ecstasy."
-    },
-    {
-      icon: Sparkles,
-      title: "Fine-Art Color Grading",
-      desc: "Every frame is hand-mastered with rich jewel tones, skin-true warmth, and editorial cinematic contrast."
-    },
-    {
-      icon: Film,
-      title: "Cinema-Grade Audio & Optics",
-      desc: "Broadcast wireless mics record sacred Vedic mantras, tender wedding vows, and heartfelt parent toasts with crystalline fidelity."
-    }
-  ];
+  const { philosophy: livePhilosophy } = useSite();
+  const philosophy = livePhilosophy || siteConfig.philosophy || {};
+
+  const pillarIcons = [Heart, Sparkles, Film, Award, Camera];
+  const pillars = philosophy.pillars && philosophy.pillars.length > 0
+    ? philosophy.pillars.map((p, idx) => ({
+        icon: pillarIcons[idx % pillarIcons.length],
+        title: p.title,
+        desc: p.desc,
+      }))
+    : [
+        {
+          icon: Heart,
+          title: "Unscripted Emotion",
+          desc: "No stiff poses or staged smiles. We capture the stolen glances, joyous family tears, and spontaneous festive ecstasy."
+        },
+        {
+          icon: Sparkles,
+          title: "Fine-Art Color Grading",
+          desc: "Every frame is hand-mastered with rich jewel tones, skin-true warmth, and editorial cinematic contrast."
+        },
+        {
+          icon: Film,
+          title: "Cinema-Grade Audio & Optics",
+          desc: "Broadcast wireless mics record sacred Vedic mantras, tender wedding vows, and heartfelt parent toasts with crystalline fidelity."
+        }
+      ];
+
+  const leadParagraph = philosophy.leadParagraph || siteConfig.philosophy?.leadParagraph;
 
   return (
     <section className={`py-24 transition-colors duration-300 relative overflow-hidden ${
@@ -43,7 +56,7 @@ export const PhilosophyBanner = ({ isDarkMode }) => {
           >
             <span className="w-6 h-[1.5px] bg-[#56876D]" />
             <span className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#56876D]">
-              OUR PHILOSOPHY
+              {philosophy.badge || "OUR PHILOSOPHY"}
             </span>
             <span className="w-6 h-[1.5px] bg-[#56876D]" />
           </motion.div>
@@ -70,12 +83,20 @@ export const PhilosophyBanner = ({ isDarkMode }) => {
               isDarkMode ? 'text-neutral-400' : 'text-[#5C6470]'
             }`}
           >
-            {siteConfig.philosophy.leadParagraph}
+            {leadParagraph}
           </motion.p>
         </div>
 
-        {/* 3 Pillars Grid with Framer Motion Stagger */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 sm:gap-8">
+        {/* Dynamic Pillars Grid with Framer Motion Stagger */}
+        <div className={
+          pillars.length <= 1
+            ? 'max-w-xl mx-auto grid grid-cols-1'
+            : pillars.length === 2
+              ? 'max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8'
+              : pillars.length === 4
+                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6'
+                : 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8'
+        }>
           {pillars.map((pillar, idx) => {
             const Icon = pillar.icon;
             return (

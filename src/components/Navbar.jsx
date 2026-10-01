@@ -1,8 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Menu, X, Sun, Moon, Shield } from 'lucide-react';
 import { siteConfig } from '../config/siteConfig';
+import { useSite } from '../context/SiteContext';
 
 export const Navbar = ({ onOpenQuote, isDarkMode, setIsDarkMode }) => {
+  const { brand: liveBrand } = useSite();
+  const brand = liveBrand || siteConfig.brand || {};
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -24,7 +28,7 @@ export const Navbar = ({ onOpenQuote, isDarkMode, setIsDarkMode }) => {
 
   // Helper to render brand name cleanly
   const renderBrandName = () => {
-    const brandName = siteConfig.brand.name || "PRAZNA / KNOTY WEDDINGS";
+    const brandName = brand?.name || "PRAZNA / KNOTY WEDDINGS";
     if (brandName.includes('/')) {
       const [first, second] = brandName.split('/').map(s => s.trim());
       return (
@@ -45,6 +49,39 @@ export const Navbar = ({ onOpenQuote, isDarkMode, setIsDarkMode }) => {
     );
   };
 
+  // Dynamic Logo renderer supporting image, text, or both
+  const renderLogo = () => {
+    const logoSrc = isDarkMode && brand.logoDarkUrl ? brand.logoDarkUrl : brand.logoUrl;
+    const height = brand.logoHeight || 38;
+
+    if (brand.logoType === 'image' && logoSrc) {
+      return (
+        <img
+          src={logoSrc}
+          alt={brand.name || 'Prazna Photography'}
+          style={{ height: `${height}px` }}
+          className="object-contain max-w-[200px]"
+        />
+      );
+    }
+
+    if (brand.logoType === 'both' && logoSrc) {
+      return (
+        <div className="flex items-center gap-3">
+          <img
+            src={logoSrc}
+            alt={brand.name || 'Prazna Photography'}
+            style={{ height: `${height}px` }}
+            className="object-contain max-w-[120px]"
+          />
+          {renderBrandName()}
+        </div>
+      );
+    }
+
+    return renderBrandName();
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -62,9 +99,9 @@ export const Navbar = ({ onOpenQuote, isDarkMode, setIsDarkMode }) => {
           <a
             href="#"
             className="flex items-center gap-2 group focus:outline-none"
-            aria-label={`${siteConfig.brand.name} Home`}
+            aria-label={`${siteConfig.brand?.name || 'Prazna'} Home`}
           >
-            {renderBrandName()}
+            {renderLogo()}
           </a>
 
           {/* Desktop Navigation Links & Action Icons */}
@@ -121,6 +158,15 @@ export const Navbar = ({ onOpenQuote, isDarkMode, setIsDarkMode }) => {
                 </svg>
               </a>
 
+              {/* Admin Studio Portal Link */}
+              <Link
+                to="/admin"
+                title="Studio Admin Portal"
+                className="w-8 h-8 rounded-full border border-[#C9A96E]/50 hover:border-[#C9A96E] hover:bg-[#C9A96E]/15 flex items-center justify-center transition-all text-[#C9A96E]"
+              >
+                <Shield className="w-3.5 h-3.5" />
+              </Link>
+
             </div>
           </div>
 
@@ -168,6 +214,14 @@ export const Navbar = ({ onOpenQuote, isDarkMode, setIsDarkMode }) => {
                 {link.name}
               </a>
             ))}
+            <Link
+              to="/admin"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-left text-base font-medium py-2 border-b border-current/10 flex items-center justify-between text-[#C9A96E]"
+            >
+              <span>Admin Studio Portal</span>
+              <Shield className="w-4 h-4" />
+            </Link>
           </nav>
 
           <div className="pt-2 flex items-center justify-between">

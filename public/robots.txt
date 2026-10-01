@@ -1,0 +1,8 @@
+# Robots.txt for Prazna Photography
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+
+# Sitemap location for Googlebot, Bingbot & Search Spiders
+Sitemap: https://praznaphotography.com/sitemap.xml

@@ -1,4 +1,4 @@
-export const siteConfig = {
+const defaultSiteConfig = {
   brand: {
     name: "PRAZNA PHOTOGRAPHY",
     tagline: "Immortalizing love in its most real, poetic, and breathtaking moments.",
@@ -10,9 +10,105 @@ export const siteConfig = {
     location: "Hyderabad • Bengaluru • Mumbai • Global Destinations",
     experienceYears: "25+",
     weddingsCount: "4,500+",
-    awardsCount: "38+ Global Honors"
+    awardsCount: "38+ Global Honors",
+    // Logo & Header Branding Options
+    logoType: "text", // "text" | "image" | "both"
+    logoUrl: "",      // Light mode / default logo image URL
+    logoDarkUrl: "",  // Dark mode logo image URL (optional)
+    logoHeight: 38,   // Height in px
+    monogram: "PRAZNA",
+    favicon: "/favicon.ico",
   },
 
+  // =========================================================================
+  // LANDING HERO: ONLY ANY ONE ACTIVE MEDIA (Single Video OR Single Image)
+  // =========================================================================
+  heroMediaType: "video", // "video" | "image" - ONLY ONE ACTIVE AT A TIME
+  activeHeroVideoId: "varsha-shiva",
+  activeHeroImageId: "heritage-bride-silk",
+
+  // Uploaded / Library of Hero Videos (Can add more, only ONE enabled)
+  heroVideos: [
+    {
+      id: "varsha-shiva",
+      name: "Varsha & Shiva (4K)",
+      type: "youtube",
+      videoId: "jcBEUpPrqY0",
+      poster: "https://img.youtube.com/vi/jcBEUpPrqY0/maxresdefault.jpg",
+      location: "Taj Falaknuma Palace, Hyderabad",
+      tagline: "Celebrating love in its most real and beautiful moments."
+    },
+    {
+      id: "athiya-rahul",
+      name: "Athiya & Rahul (Celebrity)",
+      type: "youtube",
+      videoId: "Kni0Nd76X5A",
+      poster: "https://img.youtube.com/vi/Kni0Nd76X5A/maxresdefault.jpg",
+      location: "Khandala Heritage Estate",
+      tagline: "Unscripted tenderness, soulful intimacy, and timeless vows."
+    },
+    {
+      id: "jaipur-royal",
+      name: "Royal Jaipur 4K",
+      type: "youtube",
+      videoId: "vBPFI1RI93E",
+      poster: "https://img.youtube.com/vi/vBPFI1RI93E/maxresdefault.jpg",
+      location: "Jaipur Heritage Palace",
+      tagline: "Grand fireworks, royal courtyards, and generational joy."
+    },
+    {
+      id: "sacred-muhurtham",
+      name: "Sacred Muhurtham",
+      type: "youtube",
+      videoId: "T09OJxcHPlY",
+      poster: "https://img.youtube.com/vi/T09OJxcHPlY/maxresdefault.jpg",
+      location: "Tirupati Royal Gardens",
+      tagline: "Preserving sacred mantras, divine rituals, and tears of joy."
+    },
+    {
+      id: "bindu-rithin",
+      name: "Bindu & Rithin",
+      type: "youtube",
+      videoId: "JKbK1Q_lI3A",
+      poster: "https://img.youtube.com/vi/JKbK1Q_lI3A/maxresdefault.jpg",
+      location: "Bengaluru Heritage Resort",
+      tagline: "Golden hour romance and pure unscripted laughter."
+    }
+  ],
+
+  // Uploaded / Library of Hero Images (Can add more, only ONE enabled)
+  heroImages: [
+    {
+      id: "heritage-bride-silk",
+      name: "Royal Emerald Silk Bride",
+      src: "/assets/hero-green-saree-bride.jpg",
+      location: "Hyderabad Heritage Palace",
+      tagline: "Immortalizing timeless bridal composure & handcrafted silks."
+    },
+    {
+      id: "palace-mandap-gold",
+      name: "Regal Silk & Temple Heritage",
+      src: "https://res.cloudinary.com/dbwzgdmtv/image/upload/v1768980002/portfolio/gddb5ytprmnhagxmlgew.jpg",
+      location: "Taj Falaknuma Palace",
+      tagline: "Sacred rituals framed by temple gold and royal florals."
+    },
+    {
+      id: "misty-hills-dusk",
+      name: "Misty Mountain Symphony",
+      src: "https://res.cloudinary.com/dbwzgdmtv/image/upload/v1767174950/portfolio/yarqvnmzrfp7ttidkmtw.jpg",
+      location: "Chikmagalur Emerald Valleys",
+      tagline: "Poetic intimacy under rolling misty mountain skies."
+    },
+    {
+      id: "turmeric-revelry",
+      name: "Yellow Turmeric & Petal Showers",
+      src: "https://res.cloudinary.com/dbwzgdmtv/image/upload/v1779015790/portfolio/c7ghm0ajbponglxzbxqi.jpg",
+      location: "Jaipur Heritage Haveli",
+      tagline: "Unfiltered family ecstasy during the auspicious Haldi dip."
+    }
+  ],
+
+  // Backwards-compatible alias for existing hero scenes
   heroScenes: [
     {
       id: "varsha-shiva",
@@ -61,9 +157,25 @@ export const siteConfig = {
     }
   ],
   defaultHeroSceneId: "varsha-shiva",
-  defaultHeroBackgroundMode: "cinema-video", // "cinema-video" | "heritage-bride" | "photriya-mosaic"
+  defaultHeroBackgroundMode: "cinema-video",
   heroSubtitle: "Preserving the emotions, joy, and magic that make your love story truly yours.",
   heroAvailability: "Limited availability. Enquire now.",
+
+  // =========================================================================
+  // FOOTER OPTIONS & ACCREDITATION
+  // =========================================================================
+  footer: {
+    brandName: "PRAZNA PHOTOGRAPHY",
+    tagline: "Immortalizing love in its most real, poetic, and breathtaking moments.",
+    description: "Over two decades of documenting royal palace weddings and destination celebrations. Harmonizing classic fine-art portraiture with unobtrusive, soul-stirring documentary filmmaking.",
+    copyright: "PRAZNA PHOTOGRAPHY. All rights reserved. Fine-Art Heritage Cinema.",
+    badgeText: "Honoring Sacred Vows Since 2000 • 38+ Global Honors",
+    address: "Bespoke Studios in Hyderabad, Bengaluru & Mumbai. Available for destination celebrations worldwide.",
+    showNewsletter: true,
+    newsletterHeading: "Receive Studio Monographs & Seasonal Availability",
+    newsletterSubtitle: "Strictly reserved for prospective couples and royal celebrations. No spam.",
+    showSocialIcons: true
+  },
 
   philosophy: {
     quote: "We don't simply record ceremonies; we curate heirlooms. Every frame is illuminated by sacred intimacy and natural grandeur.",
@@ -366,40 +478,40 @@ export const siteConfig = {
 
   // Bespoke Events for Custom Builder
   quoteEvents: [
-    {
-      id: "haldi",
-      name: "Haldi & Mehendi Rituals",
-      basePrice: 45000,
-      hours: "4-5 Hours Coverage",
-      description: "Organic turmeric rituals, marigold showers, intimate candid moments with close family"
+    { 
+      id: "haldi", 
+      name: "Haldi & Mehendi Rituals", 
+      basePrice: 45000, 
+      hours: "4-5 Hours Coverage", 
+      description: "Organic turmeric rituals, marigold showers, intimate candid moments with close family" 
     },
-    {
-      id: "sangeeth",
-      name: "Sangeet & Cocktail Night",
-      basePrice: 65000,
-      hours: "6-7 Hours Coverage",
-      description: "High-voltage choreography, stage glamour portraits, slow-mo party highlights & starlight dancing"
+    { 
+      id: "sangeeth", 
+      name: "Sangeet & Cocktail Night", 
+      basePrice: 65000, 
+      hours: "6-7 Hours Coverage", 
+      description: "High-voltage choreography, stage glamour portraits, slow-mo party highlights & starlight dancing" 
     },
-    {
-      id: "wedding",
-      name: "Sacred Muhurtham (Wedding Day)",
-      basePrice: 95000,
-      hours: "Full Day (8-10 Hours)",
-      description: "Fine-art bridal preparation, sacred Vedic ceremonies, vows, varmala, and family formals"
+    { 
+      id: "wedding", 
+      name: "Sacred Muhurtham (Wedding Day)", 
+      basePrice: 95000, 
+      hours: "Full Day (8-10 Hours)", 
+      description: "Fine-art bridal preparation, sacred Vedic ceremonies, vows, varmala, and family formals" 
     },
-    {
-      id: "reception",
-      name: "Grand Reception Gala",
-      basePrice: 75000,
-      hours: "5-6 Hours Coverage",
-      description: "Red carpet couple entrance, evening gala ambiance, guest portraits, speeches & toasts"
+    { 
+      id: "reception", 
+      name: "Grand Reception Gala", 
+      basePrice: 75000, 
+      hours: "5-6 Hours Coverage", 
+      description: "Red carpet couple entrance, evening gala ambiance, guest portraits, speeches & toasts" 
     },
-    {
-      id: "pre-wedding",
-      name: "Pre-Wedding Cinematic Story",
-      basePrice: 50000,
-      hours: "Full Day Outdoor Shoot",
-      description: "Exotic outdoor locations, stylized couture looks, 1-minute teaser & editorial magazine frames"
+    { 
+      id: "pre-wedding", 
+      name: "Pre-Wedding Cinematic Story", 
+      basePrice: 50000, 
+      hours: "Full Day Outdoor Shoot", 
+      description: "Exotic outdoor locations, stylized couture looks, 1-minute teaser & editorial magazine frames" 
     }
   ],
 
@@ -432,3 +544,30 @@ export const siteConfig = {
     }
   ]
 };
+
+// Check if admin has customized settings locally (pre-database hook)
+let activeConfig = defaultSiteConfig;
+if (typeof window !== "undefined") {
+  try {
+    const saved = localStorage.getItem("prazna_site_config");
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      activeConfig = {
+        ...defaultSiteConfig,
+        ...parsed,
+        brand: { ...defaultSiteConfig.brand, ...(parsed.brand || {}) },
+        footer: { ...defaultSiteConfig.footer, ...(parsed.footer || {}) },
+        philosophy: { ...defaultSiteConfig.philosophy, ...(parsed.philosophy || {}) },
+        teamAddOns: { ...defaultSiteConfig.teamAddOns, ...(parsed.teamAddOns || {}) },
+        heroVideos: parsed.heroVideos || defaultSiteConfig.heroVideos,
+        heroImages: parsed.heroImages || defaultSiteConfig.heroImages,
+        heroScenes: parsed.heroVideos || parsed.heroScenes || defaultSiteConfig.heroScenes,
+      };
+    }
+  } catch (e) {
+    console.warn("Could not load cached site config:", e);
+  }
+}
+
+export const siteConfig = activeConfig;
+

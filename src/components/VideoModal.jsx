@@ -7,14 +7,15 @@ export const VideoModal = ({ film, onClose }) => {
 
   if (!film) return null;
 
-  // Extract YouTube ID from youtubeUrl
+  // Extract YouTube ID from youtubeUrl or direct videoId
   const getYouTubeId = (url) => {
     if (!url) return null;
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([\w-]{11})/);
-    return match ? match[1] : null;
+    return match ? match[1] : (url.length === 11 ? url : null);
   };
 
-  const youtubeId = getYouTubeId(film.youtubeUrl);
+  const youtubeId = film.videoId || getYouTubeId(film.youtubeUrl);
+  const externalLinkUrl = film.youtubeUrl || (youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : null);
 
   const toggleFullscreen = () => {
     if (!containerRef.current) return;
@@ -82,9 +83,9 @@ export const VideoModal = ({ film, onClose }) => {
             </button>
 
             {/* YouTube Direct Link */}
-            {film.youtubeUrl && (
+            {externalLinkUrl && (
               <a
-                href={film.youtubeUrl}
+                href={externalLinkUrl}
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Open on YouTube"

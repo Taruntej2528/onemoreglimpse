@@ -2,16 +2,38 @@ import React, { useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Camera, Eye, MapPin, ArrowRight } from 'lucide-react';
 import { siteConfig } from '../config/siteConfig';
+import { useSite } from '../context/SiteContext';
 import { PhotoLightbox } from './PhotoLightbox';
 
 export const MasonryGallery = ({ isDarkMode }) => {
+  const { gallery: liveGallery, categories: liveCategories } = useSite();
   const [activeCategory, setActiveCategory] = useState('all');
   const [selectedPhoto, setSelectedPhoto] = useState(null);
 
+  const galleryList = useMemo(() => {
+    return liveGallery && liveGallery.length > 0 ? liveGallery : siteConfig.gallery || [];
+  }, [liveGallery]);
+
+  const categoryList = useMemo(() => {
+    if (liveCategories && liveCategories.length > 0) {
+      return [
+        { id: 'all', name: 'All Stories' },
+        ...liveCategories.map((c) => ({
+          id: c.slug || c.name.toLowerCase().replace(/[^a-z0-9]/g, '-'),
+          name: c.name,
+        })),
+      ];
+    }
+    return siteConfig.categories;
+  }, [liveCategories]);
+
   const filteredPhotos = useMemo(() => {
-    if (activeCategory === 'all') return siteConfig.gallery;
-    return siteConfig.gallery.filter((item) => item.category === activeCategory);
-  }, [activeCategory]);
+    if (activeCategory === 'all') return galleryList;
+    return galleryList.filter((item) =>
+      item.category === activeCategory ||
+      item.title?.toLowerCase().includes(activeCategory.replace(/-/g, ' '))
+    );
+  }, [activeCategory, galleryList]);
 
   return (
     <section id="gallery" className={`py-24 transition-colors duration-300 ${
@@ -60,7 +82,7 @@ export const MasonryGallery = ({ isDarkMode }) => {
 
         {/* Category Pills */}
         <div className="flex flex-wrap items-center gap-2 mb-10">
-          {siteConfig.categories.map((cat) => {
+          {categoryList.map((cat) => {
             const isActive = activeCategory === cat.id;
             return (
               <button

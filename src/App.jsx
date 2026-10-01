@@ -1,77 +1,125 @@
-import React, { useState, useEffect } from 'react';
-import { Navbar } from './components/Navbar';
-import { HeroVideo } from './components/HeroVideo';
-import { PhilosophyBanner } from './components/PhilosophyBanner';
-import { MasonryGallery } from './components/MasonryGallery';
-import { FilmsCarousel } from './components/FilmsCarousel';
-import { InteractiveQuoteEngine } from './components/InteractiveQuoteEngine';
-import { EnquiryForm } from './components/EnquiryForm';
-import { Testimonials } from './components/Testimonials';
-import { Footer } from './components/Footer';
-import { WhatsAppWidget } from './components/WhatsAppWidget';
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { SiteProvider } from './context/SiteContext';
+import { AdminAuthProvider } from './admin/context/AdminAuthContext';
+import { ProtectedRoute } from './admin/components/ProtectedRoute';
+import { AdminLayout } from './admin/components/AdminLayout';
+import { AdminLogin } from './admin/pages/AdminLogin';
+import { AdminDashboard } from './admin/pages/AdminDashboard';
+import { AdminEvents } from './admin/pages/AdminEvents';
+import { AdminRequests } from './admin/pages/AdminRequests';
+import { AdminSettings } from './admin/pages/AdminSettings';
+import { AdminNotifications } from './admin/pages/AdminNotifications';
+import { AdminUsers } from './admin/pages/AdminUsers';
+import { AdminLogs } from './admin/pages/AdminLogs';
+import { WebsiteLandingPage } from './pages/WebsiteLandingPage';
 
 export function App() {
-  const [isQuoteModalOpen, setIsQuoteModalOpen] = useState(false);
-  // Default to light mode (false) for warm ivory luxury aesthetics
-  const [isDarkMode, setIsDarkMode] = useState(false);
-
-  useEffect(() => {
-    if (isDarkMode) {
-      document.documentElement.classList.add('dark');
-      document.body.className = 'theme-dark bg-[#0C0E14] text-[#F3F4F6]';
-    } else {
-      document.documentElement.classList.remove('dark');
-      document.body.className = 'theme-light bg-[#FAF8F5] text-[#1A1D20]';
-    }
-  }, [isDarkMode]);
-
   return (
-    <div className={`min-h-screen flex flex-col font-sans transition-colors duration-300 ${
-      isDarkMode ? 'bg-[#0C0E14] text-[#F3F4F6]' : 'bg-[#FAF8F5] text-[#1A1D20]'
-    }`}>
-      {/* Sticky Navigation Bar with dynamic brand name and theme switcher */}
-      <Navbar
-        onOpenQuote={() => setIsQuoteModalOpen(true)}
-        isDarkMode={isDarkMode}
-        setIsDarkMode={setIsDarkMode}
-      />
+    <SiteProvider>
+      <AdminAuthProvider>
+        <BrowserRouter>
+          <Routes>
+            {/* Public Website */}
+            <Route path="/" element={<WebsiteLandingPage />} />
 
-      {/* Main Content Sections */}
-      <main className="flex-grow">
-        {/* Fullscreen Video Hero Section */}
-        <HeroVideo onOpenQuote={() => setIsQuoteModalOpen(true)} />
+            {/* Admin Authentication Screen */}
+            <Route path="/admin/login" element={<AdminLogin />} />
 
-        {/* Brand Philosophy & Craftsmanship Section */}
-        <PhilosophyBanner isDarkMode={isDarkMode} />
+            {/* Protected Admin Suite */}
+            <Route
+              path="/admin"
+              element={
+                <ProtectedRoute>
+                  <AdminLayout />
+                </ProtectedRoute>
+              }
+            >
+              {/* Dashboard / Overview */}
+              <Route
+                index
+                element={
+                  <ProtectedRoute moduleRequired="dashboard">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="dashboard"
+                element={
+                  <ProtectedRoute moduleRequired="dashboard">
+                    <AdminDashboard />
+                  </ProtectedRoute>
+                }
+              />
 
-        {/* Visual Stories: Non-overlapping 4-column masonry grid */}
-        <MasonryGallery isDarkMode={isDarkMode} />
+              {/* Shoot Events & Schedules */}
+              <Route
+                path="events"
+                element={
+                  <ProtectedRoute moduleRequired="events">
+                    <AdminEvents />
+                  </ProtectedRoute>
+                }
+              />
 
-        {/* Cinematic Master Films: 16:9 Landscape Widescreen Carousel */}
-        <FilmsCarousel isDarkMode={isDarkMode} />
+              {/* Client Requests & Leads */}
+              <Route
+                path="requests"
+                element={
+                  <ProtectedRoute moduleRequired="client_requests">
+                    <AdminRequests />
+                  </ProtectedRoute>
+                }
+              />
 
-        {/* Next-Gen Interactive Quote Engine (Signature Packages & Bespoke Calculator) */}
-        <InteractiveQuoteEngine
-          isDarkMode={isDarkMode}
-          onOpenCustomModal={() => setIsQuoteModalOpen(true)}
-        />
+              {/* Multi-Cloud Storage & Settings */}
+              <Route
+                path="settings"
+                element={
+                  <ProtectedRoute moduleRequired="settings">
+                    <AdminSettings />
+                  </ProtectedRoute>
+                }
+              />
 
-        {/* Reserve Your Date: Enquiry Concierge Form */}
-        <EnquiryForm isDarkMode={isDarkMode} />
+              {/* Notification Center */}
+              <Route
+                path="notifications"
+                element={
+                  <ProtectedRoute moduleRequired="notifications">
+                    <AdminNotifications />
+                  </ProtectedRoute>
+                }
+              />
 
-        {/* Testimonials & Client Reviews */}
-        <Testimonials isDarkMode={isDarkMode} />
-      </main>
+              {/* User Access Management & RBAC */}
+              <Route
+                path="users"
+                element={
+                  <ProtectedRoute moduleRequired="users">
+                    <AdminUsers />
+                  </ProtectedRoute>
+                }
+              />
 
-      {/* Luxury Footer with dynamic credentials */}
-      <Footer
-        onOpenQuote={() => setIsQuoteModalOpen(true)}
-        isDarkMode={isDarkMode}
-      />
+              {/* System Audit Logs */}
+              <Route
+                path="logs"
+                element={
+                  <ProtectedRoute moduleRequired="logs">
+                    <AdminLogs />
+                  </ProtectedRoute>
+                }
+              />
+            </Route>
 
-      {/* Floating WhatsApp Widget */}
-      <WhatsAppWidget />
-    </div>
+            {/* Catch-all redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </AdminAuthProvider>
+    </SiteProvider>
   );
 }
 

@@ -26,8 +26,30 @@ import {
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { siteConfig } from '../config/siteConfig';
+import { useSite } from '../context/SiteContext';
 
 export const InteractiveQuoteEngine = ({ isDarkMode, onOpenCustomModal }) => {
+  const {
+    packages: livePackages,
+    signaturePackages: liveSignaturePackages,
+    quoteEvents: liveQuoteEvents,
+    teamAddOns: liveTeamAddOns,
+    brand: liveBrand,
+    submitInquiry,
+  } = useSite();
+  const brand = liveBrand || siteConfig.brand || {};
+  const activePackages =
+    liveSignaturePackages && liveSignaturePackages.length > 0
+      ? liveSignaturePackages
+      : livePackages && livePackages.length > 0
+        ? livePackages
+        : siteConfig.signaturePackages;
+  const availableEvents =
+    liveQuoteEvents && liveQuoteEvents.length > 0
+      ? liveQuoteEvents
+      : siteConfig.quoteEvents;
+  const teamRates = liveTeamAddOns || siteConfig.teamAddOns;
+
   // Mode: "curated" (Signature Packages) vs "custom" (Bespoke Builder)
   const [activeTab, setActiveTab] = useState('curated');
 
@@ -61,24 +83,33 @@ export const InteractiveQuoteEngine = ({ isDarkMode, onOpenCustomModal }) => {
   // Pricing calculation
   const calculation = useMemo(() => {
     let eventsTotal = 0;
-    const selectedEventObjs = siteConfig.quoteEvents.filter((ev) =>
+    const selectedEventObjs = availableEvents.filter((ev) =>
       selectedEvents.includes(ev.id)
     );
     selectedEventObjs.forEach((ev) => {
-      eventsTotal += ev.basePrice;
+      eventsTotal += Number(ev.basePrice) || 0;
     });
 
     const eventCount = selectedEvents.length;
     const extraPhotos = Math.max(0, photographerCount - 1);
     const extraVideos = Math.max(0, videographerCount - 1);
 
-    const extraPhotoCost = extraPhotos * siteConfig.teamAddOns.photographerRate * eventCount;
-    const extraVideoCost = extraVideos * siteConfig.teamAddOns.videographerRate * eventCount;
-    const droneCost = droneIncluded ? siteConfig.teamAddOns.droneRate * eventCount : 0;
-    const teaserCost = teaserReelIncluded ? siteConfig.teamAddOns.teaserReelRate * eventCount : 0;
-    const albumCost = albumIncluded ? siteConfig.teamAddOns.albumRate : 0;
+    const extraPhotoCost =
+      extraPhotos * (Number(teamRates.photographerRate) || 16000) * eventCount;
+    const extraVideoCost =
+      extraVideos * (Number(teamRates.videographerRate) || 20000) * eventCount;
+    const droneCost = droneIncluded
+      ? (Number(teamRates.droneRate) || 18000) * eventCount
+      : 0;
+    const teaserCost = teaserReelIncluded
+      ? (Number(teamRates.teaserReelRate) || 12000) * eventCount
+      : 0;
+    const albumCost = albumIncluded
+      ? Number(teamRates.albumRate) || 25000
+      : 0;
 
-    const grandTotal = eventsTotal + extraPhotoCost + extraVideoCost + droneCost + teaserCost + albumCost;
+    const grandTotal =
+      eventsTotal + extraPhotoCost + extraVideoCost + droneCost + teaserCost + albumCost;
 
     return {
       eventsTotal,
@@ -97,6 +128,8 @@ export const InteractiveQuoteEngine = ({ isDarkMode, onOpenCustomModal }) => {
     droneIncluded,
     teaserReelIncluded,
     albumIncluded,
+    availableEvents,
+    teamRates,
   ]);
 
   const formatCurrency = (amount) => {
@@ -107,8 +140,8 @@ export const InteractiveQuoteEngine = ({ isDarkMode, onOpenCustomModal }) => {
     }).format(amount);
   };
 
-  // Send Signature Package to WhatsApp
-  const handleReservePackage = (pkg) => {
+  // Send Signature Package to WhatsApp & persist lead to MongoDB
+  const handleReservePackage = async (pkg) => {
     confetti({
       particleCount: 80,
       spread: 70,
@@ -116,7 +149,19 @@ export const InteractiveQuoteEngine = ({ isDarkMode, onOpenCustomModal }) => {
       colors: ['#56876D', '#C9A96E', '#1A1D20'],
     });
 
-    const msg = `✨ *Wedding Photography Inquiry - ${siteConfig.brand.name}* ✨
+    // Record inquiry in MongoDB
+    if (submitInquiry) {
+      await submitInquiry({
+        clientName: 'Package Reservation Lead',
+        selectedPackage: pkg.name,
+        budget: formatCurrency(pkg.price),
+        eventType: pkg.idealFor || 'Signature Wedding Celebration',
+        notes: `Reserved signature collection: ${pkg.name}. Inclusions: ${pkg.inclusions?.slice(0, 3).join(', ')}`,
+        source: 'package_reservation',
+      }).catch(() => null);
+    }
+
+    const msg = `✨ *Wedding Photography Inquiry - ${brand.name}* ✨
 -----------------------------------------
 👑 *Selected Signature Collection:* ${pkg.name}
 💰 *Package Investment:* ${formatCurrency(pkg.price)}
@@ -128,12 +173,12 @@ ${pkg.inclusions.map(inc => `• ${inc}`).join('\n')}
 -----------------------------------------
 Hi Prazna Studio, please check date availability and send me the detailed contract!`;
 
-    const cleanNumber = siteConfig.brand.whatsappNumber.replace(/[^0-9]/g, '');
+    const cleanNumber = (brand.whatsappNumber || '919876543210').replace(/[^0-9]/g, '');
     window.open(`https://wa.me/${cleanNumber}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
-  // Send Bespoke Custom Quote to WhatsApp
-  const handleSendCustomQuote = () => {
+  // Send Bespoke Custom Quote to WhatsApp & persist lead to MongoDB
+  const handleSendCustomQuote = async () => {
     confetti({
       particleCount: 90,
       spread: 75,
@@ -143,7 +188,21 @@ Hi Prazna Studio, please check date availability and send me the detailed contra
 
     const quoteId = `PRZ-${Math.floor(100 + Math.random() * 900)}`;
 
-    const msg = `✨ *Bespoke Wedding Quote [Ref: ${quoteId}] - ${siteConfig.brand.name}* ✨
+    // Record custom quote inquiry in MongoDB
+    if (submitInquiry) {
+      await submitInquiry({
+        clientName: clientName || 'Bespoke Quote Client',
+        phone: clientPhone,
+        eventDate: eventDate,
+        eventCity: eventCity,
+        budget: formatCurrency(calculation.grandTotal),
+        eventType: calculation.selectedEventObjs.map((e) => e.name).join(', '),
+        notes: `Custom Quote [${quoteId}]: ${photographerCount} photographers, ${videographerCount} cinematographers, Drone: ${droneIncluded ? 'Yes' : 'No'}, Album: ${albumIncluded ? 'Yes' : 'No'}`,
+        source: 'quote_calculator',
+      }).catch(() => null);
+    }
+
+    const msg = `✨ *Bespoke Wedding Quote [Ref: ${quoteId}] - ${brand.name}* ✨
 -----------------------------------------
 👤 *Client Name:* ${clientName || 'Not specified'}
 📱 *Phone:* ${clientPhone || 'Not specified'}
@@ -164,7 +223,7 @@ ${calculation.selectedEventObjs.map((e) => `• ${e.name} (${formatCurrency(e.ba
 -----------------------------------------
 Please verify date availability and reserve this quote configuration!`;
 
-    const cleanNumber = siteConfig.brand.whatsappNumber.replace(/[^0-9]/g, '');
+    const cleanNumber = (brand.whatsappNumber || '919876543210').replace(/[^0-9]/g, '');
     window.open(`https://wa.me/${cleanNumber}?text=${encodeURIComponent(msg)}`, '_blank');
   };
 
@@ -257,9 +316,9 @@ Contact: ${siteConfig.brand.phone}`;
               transition={{ duration: 0.4 }}
               className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch"
             >
-              {siteConfig.signaturePackages.map((pkg, idx) => (
+              {activePackages.map((pkg, idx) => (
                 <div
-                  key={pkg.id}
+                  key={pkg.id || pkg._id || idx}
                   className={`rounded-3xl p-8 flex flex-col justify-between transition-all duration-300 relative border ${
                     pkg.badge === "Most Popular"
                       ? isDarkMode
@@ -369,7 +428,7 @@ Contact: ${siteConfig.brand.phone}`;
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {siteConfig.quoteEvents.map((event) => {
+                    {availableEvents.map((event) => {
                       const isSelected = selectedEvents.includes(event.id);
                       return (
                         <div
